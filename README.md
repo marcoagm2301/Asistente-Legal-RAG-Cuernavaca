@@ -2,8 +2,14 @@
 
 Prototipo de un asistente legal basado en **Retrieval-Augmented Generation (RAG)** diseñado para consultar, cruzar y citar normativas de tránsito, movilidad y transporte en tres niveles de jurisdicción en México: **Municipal (Cuernavaca), Estatal (Morelos) y Federal (Carreteras y Puentes)**.
 
-🔗 **[Probar el Agente en Vivo aquí (Dify Web App)](TU_LINK_PUBLICO_DE_DIFY_AQUI)**  
+**[Probar el Agente en Vivo aquí (Dify Web App)](TU_LINK_PUBLICO_DE_DIFY_AQUI)**  
 *(Nota: El demo opera sobre una cuota gratuita de API limitada por minuto; si recibes un error de límite de cuota, intenta nuevamente en unos minutos).*
+
+---
+
+**Nota sobre el Desarrollo y la Asistencia de IA**
+
+Este pipeline ETL no fue escrito línea por línea de manera manual tradicional; fue diseñado y orquestado bajo un enfoque de AI-Assisted Engineering. Utilizando grandes modelos de lenguaje como copilotos de desarrollo, la autoría humana se centró en lo verdaderamente crítico: el diseño de la arquitectura, la definición de las reglas de negocio (Data Hygiene), la validación de casos borde (edge cases) en documentos jurídicos y el control de calidad de los datos resultantes (Ground Truth Validation). La IA aceleró la síntesis de sintaxis; la estrategia y la lógica jurídica fueron cien por ciento de diseño propio.
 
 ---
 
