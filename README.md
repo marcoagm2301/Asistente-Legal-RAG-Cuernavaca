@@ -1,66 +1,70 @@
-# Asistente Jurídico Vial Multijurisdiccional (RAG MVP)
+# Multi-Jurisdictional Legal-RAG Assistant (RAG MVP)
 
-Prototipo de un asistente legal basado en **Retrieval-Augmented Generation (RAG)** diseñado para consultar, cruzar y citar normativas de tránsito, movilidad y transporte en tres niveles de jurisdicción en México: **Municipal (Cuernavaca), Estatal (Morelos) y Federal (Carreteras y Puentes)**.
+Prototype of a legal assistant based on **Retrieval-Augmented Generation (RAG)** designed to query, cross-reference, and cite traffic, mobility, and transportation regulations across three jurisdiction levels in Mexico: **Municipal (Cuernavaca), State (Morelos), and Federal (Highways and Bridges)**.
 
-**Probar el Agente en Vivo aquí [Dify Web App](https://udify.app/chat/4DLVIDv2ZFbZYAgA) (Necesita activación de API de Google IA para su funcionamiento)**  
+**Test the Agent Live here [Dify Web App](https://udify.app/chat/4DLVIDv2ZFbZYAgA) (Requires Google AI API activation to work)**
 
----
+## Project Objective
 
-## Objetivo del Proyecto
+This project was born as a practical exercise in data engineering and LLM orchestration (developed in a 2.5-day sprint) to explore the real challenges behind automated legal assistance tools, such as exact source traceability, hallucination mitigation, and the segmentation of extensive legal corpora.
 
-Este proyecto nació como un ejercicio práctico de ingeniería de datos y orquestación de LLMs (desarrollado en un sprint de 2.5 días) para explorar los retos reales detrás de herramientas de asistencia jurídica automatizada, tales como la trazabilidad exacta de fuentes, la mitigación de alucinaciones y la segmentación de corpus legales extensos.
+**Note on Development and AI Assistance**
 
----
+This ETL pipeline was not written line by line in a traditional manual way; it was designed and orchestrated under an AI-Assisted Engineering approach. Using large language models as development copilots, human authorship focused on what was truly critical: architecture design, definition of business rules (Data Hygiene), edge case validation in legal documents, and quality control of the resulting data (Ground Truth Validation). AI accelerated syntax synthesis; strategy and legal logic were one hundred percent custom-designed.
 
-**Nota sobre el Desarrollo y la Asistencia de IA**
+## Architecture and Tech Stack
 
-Este pipeline ETL no fue escrito línea por línea de manera manual tradicional; fue diseñado y orquestado bajo un enfoque de AI-Assisted Engineering. Utilizando grandes modelos de lenguaje como copilotos de desarrollo, la autoría humana se centró en lo verdaderamente crítico: el diseño de la arquitectura, la definición de las reglas de negocio (Data Hygiene), la validación de casos borde (edge cases) en documentos jurídicos y el control de calidad de los datos resultantes (Ground Truth Validation). La IA aceleró la síntesis de sintaxis; la estrategia y la lógica jurídica fueron cien por ciento de diseño propio.
+* **RAG Workflow Orchestration:** [Dify](https://dify.ai/) (Visual chatflow).
 
----
+* **Documentary ETL & Preprocessing:** Python (`pypdf`, `re`) for institutional noise cleaning and hierarchical structuring.
 
-## Arquitectura y Stack Tecnológico
+* **Language Model (LLM):** Google Gemini Flash family (via Google AI Studio API - *BYOK* scheme).
 
-* **Orquestación del Flujo RAG:** [Dify](https://dify.ai/) (Chatflow visual).
-* **Preprocesamiento y ETL Documental:** Python (`pypdf`, `re`) para limpieza de ruido institucional y estructuración jerárquica.
-* **Modelo de Lenguaje (LLM):** Familia Google Gemini Flash (vía Google AI Studio API - esquema *BYOK*).
-* **Estrategia de Segmentación:** *Context-Enriched Chunking* personalizado mediante delimitadores explícitos (`===CHUNK===`).
+* **Segmentation Strategy:** Custom *Context-Enriched Chunking* using explicit delimiters (`===CHUNK===`).
 
-### Corpus Normativo Integrado
-1. **Nivel Municipal:** Reglamento de Tránsito y Vialidad del Municipio de Cuernavaca, Morelos (`159 chunks`).
-2. **Nivel Estatal:** Ley de Movilidad, Transporte y Seguridad Vial del Estado de Morelos (`284 chunks`).
-3. **Nivel Federal:** Reglamento de Tránsito en Carreteras y Puentes de Jurisdicción Federal (`302 chunks`).
+### Integrated Regulatory Corpus
 
----
+1. **Municipal Level:** Traffic and Roadway Regulations of the Municipality of Cuernavaca, Morelos (`159 chunks`).
+   ​2. **State Level:** Mobility, Transportation and Road Safety Law of the State of Morelos (`284 chunks`).
 
-## Retos Técnicos, Obstáculos y Consideraciones de Uso
+2. **Federal Level:** Traffic Regulations on Federal Jurisdiction Highways and Bridges (`302 chunks`).
 
-Durante el desarrollo y las pruebas de estrés (*QA*) del asistente, nos enfrentamos a desafíos críticos inherentes a la indexación de documentos jurídicos. Es fundamental tener en cuenta los siguientes puntos para comprender el comportamiento de la herramienta:
+## Technical Challenges, Obstacles, and Usage Considerations
 
-### 1. El Desafío de la Semántica y el Vocabulario Jurídico
-Uno de los mayores obstáculos en los sistemas RAG aplicados al derecho es la discrepancia entre el **lenguaje coloquial del usuario** y la **terminología estricta de las leyes**. 
-* **El problema:** Consultas formuladas con términos cotidianos o imprecisos (por ejemplo, referirse coloquialmente a una infracción o a un tipo de vehículo sin su denominación técnica oficial) pueden provocar falsos negativos o respuestas nulas, ya que el motor de búsqueda vectorial calcula similitudes matemáticas directas.
-* **Recomendación de uso:** La calidad, precisión y optimización de los resultados dependen directamente de la semántica y los términos empleados en la consulta. Redactar preguntas utilizando conceptos jurídicos afines o complementarios facilita enormemente que el agente recupere el artículo correcto.
+During the development and stress testing (*QA*) of the assistant, we faced critical challenges inherent to legal document indexing. It is essential to keep the following points in mind to understand the tool's behavior:
 
-### 2. Prevención de Falsos Negativos ante Preguntas en Negativo o Prohibiciones
-Las leyes y reglamentos no operan bajo prohibiciones absolutas para todos los supuestos, sino mediante marcos regulatorios, habilitaciones de derechos o excepciones (por ejemplo, la regulación de grupos vulnerables o permisos especiales). 
-* **El problema:** Preguntas formuladas en sentido negativo (ej. indagando por prohibiciones inexistentes) suelen confundir a los modelos tradicionales orientados a una literalidad estricta, llevándolos a responder de manera prematura que "no hay información".
-* **Solución aplicada:** Se calibraron las reglas del sistema y los hiperparámetros para interpretar la intención normativa subyacente y evitar bloqueos por falsos vacíos legales.
+### 1. The Challenge of Semantics and Legal Vocabulary
 
-### 3. Mitigación de "Orphan Chunks" (Fragmentos Huérfanos)
-Al indexar documentos legales extensos mediante saltos de línea genéricos, las fracciones (`I, II...`) y los incisos quedaban separados del encabezado de su artículo, perdiendo contexto.
-* **Solución:** Se implementó un pipeline de ETL en Python que limpia el ruido institucional (periódicos oficiales, sellos y paginación) e inyecta dinámicamente metadatos de jerarquía en cada bloque (`[Fuente | Título | Capítulo | Artículo]`).
+One of the biggest obstacles in RAG systems applied to law is the discrepancy between the **user's colloquial language** and the **strict terminology of the laws**.
 
----
+* **The problem:** Queries formulated with everyday or imprecise terms (for example, referring colloquially to an infraction or vehicle type without its official technical denomination) can trigger false negatives or null responses, since the vector search engine calculates direct mathematical similarities.
 
-## Limitaciones Actuales y Trabajo Futuro (Roadmap)
+* **Usage recommendation:** Quality, precision, and result optimization depend directly on the semantics and terms used in the query. Drafting questions using related or complementary legal concepts greatly helps the agent retrieve the correct article.
 
-* **Implementación de Reranking Híbrido:** Integrar un modelo de *Cross-Encoder Reranking* para refinar el orden de relevancia de los fragmentos recuperados.
-* **Capa de Query Expansion:** Incorporar un nodo intermedio de reescritura de consultas que traduzca automáticamente la jerga ciudadana a terminología jurídica antes de la búsqueda vectorial.
+### 2. Prevention of False Negatives against Negative Questions or Prohibitions
 
----
+Laws and regulations do not operate under absolute prohibitions for all cases, but rather through regulatory frameworks, rights habilitations, or exceptions (for example, the regulation of vulnerable groups or special permits).
 
-## 📂 Contenido del Repositorio
+* **The problem:** Queries formulated in a negative sense (e.g., inquiring about non-existent prohibitions) tend to confuse traditional models oriented toward strict literalness, leading them to respond prematurely that "there is no information."
 
-* `/data/processed/`: Archivos `.txt` limpios y enriquecidos con metadatos listos para vectorización.
-* `/scripts/`: Código en Python utilizado para el procesamiento y limpieza de las leyes.
-* `/prompts/`: Iteraciones y versión final del *System Prompt*.
+* **Applied solution:** System rules and hyperparameters were calibrated to interpret the underlying normative intent and avoid blocks due to false legal gaps.
+
+### 3. Mitigation of "Orphan Chunks"
+
+When indexing extensive legal documents using generic line breaks, clauses (`I, II...`) and sub-clauses were separated from their article header, losing context.
+
+* **Solution:** A Python ETL pipeline was implemented to clean institutional noise (official gazettes, stamps, and pagination) and dynamically inject hierarchy metadata into each block (`[Source | Title | Chapter | Article]`).
+
+## Current Limitations and Future Work (Roadmap)
+
+* **Hybrid Reranking Implementation:** Integrate a *Cross-Encoder Reranking* model to refine the relevance order of retrieved chunks.
+
+* **Query Expansion Layer:** Incorporate an intermediate query rewriting node that automatically translates citizen slang into legal terminology before vector search.
+
+## 📂 Repository Content
+
+* `/data/processed/`: Cleaned and metadata-enriched `.txt` files ready for vectorization.
+
+* `/scripts/`: Python code used for processing and cleaning the laws.
+
+* `/prompts/`: Iterations and final version of the *System Prompt*.
