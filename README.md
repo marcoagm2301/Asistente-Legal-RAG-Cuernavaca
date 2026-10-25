@@ -2,7 +2,7 @@
 
 Prototipo de un asistente legal basado en **Retrieval-Augmented Generation (RAG)** diseñado para consultar, cruzar y citar normativas de tránsito, movilidad y transporte en tres niveles de jurisdicción en México: **Municipal (Cuernavaca), Estatal (Morelos) y Federal (Carreteras y Puentes)**.
 
-**[Probar el Agente en Vivo aquí (Dify Web App)]([(https://udify.app/chat/4DLVIDv2ZFbZYAgA)])**  
+**Probar el Agente en Vivo aquí [Dify Web App](https://udify.app/chat/4DLVIDv2ZFbZYAgA) (Necesita activación de API de Google IA para su funcionamiento)**  
 
 ---
 
@@ -60,10 +60,6 @@ Al indexar documentos legales extensos mediante saltos de línea genéricos, las
 ---
 
 ## 📂 Contenido del Repositorio
-
-* `/data/processed/`: Archivos `.txt` limpios y enriquecidos con metadatos listos para vectorización.
-* `/scripts/`: Código en Python utilizado para el procesamiento y limpieza de las leyes.
-* `/prompts/`: Iteraciones y versión final del *System Prompt*.
 
 * `/data/processed/`: Archivos `.txt` limpios y enriquecidos con metadatos listos para vectorización.
 * `/scripts/`: Código en Python utilizado para el procesamiento y limpieza de las leyes.
