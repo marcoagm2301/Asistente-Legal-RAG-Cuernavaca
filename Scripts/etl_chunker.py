@@ -1,13 +1,13 @@
 """
-Pipeline ETL y Context-Enriched Chunking para Documentos Normativos (RAG)
+ETL Pipeline and Context-Enriched Chunking for Normative Documents (RAG)
 ========================================================================
-Este script extrae texto de archivos PDF o TXT legales, elimina el ruido
-institucional (encabezados, pies de página, sellos de agua), reconstruye
-párrafos cortados por saltos de línea y aplica Context-Enriched Chunking,
-inyectando la jerarquía normativa (Fuente, Título, Capítulo y Artículo)
-al inicio de cada bloque separado por el delimitador '===CHUNK==='.
+This script extracts text from legal PDF or TXT files, removes institutional
+noise (headers, footers, watermarks), reconstructs paragraphs cut off by
+line breaks, and applies Context-Enriched Chunking, injecting normative
+hierarchy (Source, Title, Chapter, and Article) at the beginning of each
+block separated by the '===CHUNK===' delimiter.
 
-Requisitos:
+Requirements:
     pip install pypdf
 """
 
@@ -19,7 +19,7 @@ import pypdf
 
 
 # =====================================================================
-# 1. DICCIONARIO DE CONFIGURACIÓN POR JURISDICCIÓN (REGLAS DE HIGIENE)
+# 1. JURISDICTION CONFIGURATION DICTIONARY (DATA HYGIENE RULES)
 # =====================================================================
 PROFILES: Dict[str, Dict] = {
     "cuernavaca": {
@@ -87,10 +87,10 @@ PROFILES: Dict[str, Dict] = {
 
 
 # =====================================================================
-# 2. CAPA DE EXTRACCIÓN (PDF / TXT)
+# 2. EXTRACTION LAYER (PDF / TXT)
 # =====================================================================
 def extract_raw_lines(filepath: str) -> List[str]:
-    """Extrae las líneas crudas desde un archivo .pdf o .txt."""
+    """Extracts raw lines from a .pdf or .txt file."""
     ext = os.path.splitext(filepath)[1].lower()
     lines = []
 
@@ -104,18 +104,18 @@ def extract_raw_lines(filepath: str) -> List[str]:
         with open(filepath, "r", encoding="utf-8") as f:
             lines = f.read().split("\n")
     else:
-        raise ValueError(f"Formato de archivo no soportado: {ext}. Usa .pdf o .txt")
+        raise ValueError(f"Unsupported file format: {ext}. Use .pdf or .txt")
 
     return lines
 
 
 # =====================================================================
-# 3. CAPA DE DATA HYGIENE (LIMPIEZA Y RECONSTRUCCIÓN DE PÁRRAFOS)
+# 3. DATA HYGIENE LAYER (CLEANING AND PARAGRAPH RECONSTRUCTION)
 # =====================================================================
 def clean_and_merge_lines(raw_lines: List[str], profile: Dict) -> List[str]:
     """
-    Filtra encabezados/pies de página y une líneas cortadas a mitad de oración,
-    respetando los inicios de Títulos, Capítulos, Artículos, Fracciones e Incisos.
+    Filters out headers/footers and joins lines cut off mid-sentence,
+    respecting the beginnings of Titles, Chapters, Articles, Sections, and Clauses.
     """
     clean_lines = []
     noise_phrases = profile.get("noise_phrases", [])
@@ -126,17 +126,17 @@ def clean_and_merge_lines(raw_lines: List[str], profile: Dict) -> List[str]:
         if not ls:
             continue
 
-        # 1. Filtrar por frases de ruido institucional conocidas
+        # 1. Filter by known institutional noise phrases
         if any(phrase.lower() in ls.lower() for phrase in noise_phrases):
             continue
 
-        # 2. Filtrar por patrones regex (paginación, fechas sueltas, líneas punteadas)
+        # 2. Filter by regex patterns (pagination, loose dates, dotted lines)
         if any(regex.match(ls) for regex in noise_regex):
             continue
 
         clean_lines.append(ls)
 
-    # Patrón que identifica el inicio de una unidad estructural legal
+    # Pattern identifying the start of a legal structural unit
     structural_pattern = re.compile(
         r"^(TÍTULO\s+[IVXLCDM\w]+|CAPÍTULO\s+[IVXLCDM\w]+|SECCIÓN\s+[IVXLCDM\w]+|"
         r"Artículo\s+\d+|ARTÍCULO\s+\d+|TRANSITORIOS|DISPOSICIONES\s+TRANSITORIAS|"
@@ -157,7 +157,7 @@ def clean_and_merge_lines(raw_lines: List[str], profile: Dict) -> List[str]:
 
 
 # =====================================================================
-# 4. MOTOR DE CONTEXT-ENRICHED CHUNKING (MÁQUINA DE ESTADOS)
+# 4. CONTEXT-ENRICHED CHUNKING ENGINE (STATE MACHINE)
 # =====================================================================
 def build_enriched_chunks(
     merged_lines: List[str],
@@ -165,10 +165,10 @@ def build_enriched_chunks(
     max_chunk_chars: int = 1200,
 ) -> List[str]:
     """
-    Recorre las líneas limpias manteniendo en memoria el Título, Capítulo y Artículo
-    actual. Si un artículo con muchas fracciones supera `max_chunk_chars`, lo divide
-    en sub-bloques pero inyecta siempre el encabezado jerárquico y el primer párrafo
-    del artículo para evitar 'orphan chunks'.
+    Iterates through clean lines while keeping the current Title, Chapter, and
+    Article in memory. If an article with many clauses exceeds `max_chunk_chars`,
+    it splits it into sub-blocks while always injecting the hierarchical header
+    and the article's first paragraph to prevent 'orphan chunks'.
     """
     chunks = []
     current_title = "DISPOSICIONES GENERALES"
@@ -182,7 +182,7 @@ def build_enriched_chunks(
         nonlocal current_buffer, current_len
         if not current_buffer:
             return
-        header = f"[Fuente: {source_label} | {current_title} | {current_chapter} | {current_article}]"
+        header = f"[Source: {source_label} | {current_title} | {current_chapter} | {current_article}]"
         if current_article_intro and current_article_intro not in current_buffer[0]:
             body = f"{header}\n{current_article_intro}\n" + "\n".join(current_buffer)
         else:
@@ -238,49 +238,49 @@ def build_enriched_chunks(
 
 
 # =====================================================================
-# 5. CLI PRINCIPAL
+# 5. MAIN CLI
 # =====================================================================
 def process_document(input_path: str, output_path: str, profile_name: str, max_chars: int = 1200):
     if profile_name not in PROFILES:
-        raise ValueError(f"Perfil '{profile_name}' no reconocido. Opciones: {list(PROFILES.keys())}")
+        raise ValueError(f"Profile '{profile_name}' not recognized. Options: {list(PROFILES.keys())}")
 
     profile = PROFILES[profile_name]
-    print(f"[*] Extrayendo texto de: {input_path}")
+    print(f"[*] Extracting text from: {input_path}")
     raw_lines = extract_raw_lines(input_path)
 
-    print(f"[*] Aplicando Data Hygiene con perfil '{profile_name}'...")
+    print(f"[*] Applying Data Hygiene with profile '{profile_name}'...")
     merged_lines = clean_and_merge_lines(raw_lines, profile)
 
-    print(f"[*] Generando Context-Enriched Chunks (máx {max_chars} chars por bloque)...")
+    print(f"[*] Generating Context-Enriched Chunks (max {max_chars} chars per block)...")
     chunks = build_enriched_chunks(merged_lines, profile["source_label"], max_chars)
 
     output_text = "\n\n===CHUNK===\n\n".join(chunks)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(output_text)
 
-    print(f"[+] ¡Proceso completado! Total de chunks generados: {len(chunks)}")
-    print(f"[+] Archivo guardado en: {output_path}")
+    print(f"[+] Process completed! Total chunks generated: {len(chunks)}")
+    print(f"[+] File saved to: {output_path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Pipeline ETL y Context-Enriched Chunking para normativas legales en Dify RAG."
+        description="ETL Pipeline and Context-Enriched Chunking for legal regulations in Dify RAG."
     )
-    parser.add_argument("--input", "-i", required=True, help="Ruta del archivo de entrada (.pdf o .txt)")
-    parser.add_argument("--output", "-o", required=True, help="Ruta del archivo de salida (.txt)")
+    parser.add_argument("--input", "-i", required=True, help="Input file path (.pdf or .txt)")
+    parser.add_argument("--output", "-o", required=True, help="Output file path (.txt)")
     parser.add_argument(
         "--profile",
         "-p",
         required=True,
         choices=["cuernavaca", "federal", "morelos"],
-        help="Perfil de limpieza según la jurisdicción del documento",
+        help="Cleaning profile based on the document's jurisdiction",
     )
     parser.add_argument(
         "--max-chars",
         "-m",
         type=int,
         default=1200,
-        help="Longitud máxima aproximada por chunk antes de dividir fracciones (default: 1200)",
+        help="Approximate maximum length per chunk before splitting clauses (default: 1200)",
     )
 
     args = parser.parse_args()
